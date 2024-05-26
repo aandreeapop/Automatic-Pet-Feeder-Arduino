@@ -7,8 +7,8 @@
 #include <SoftwareSerial.h>
 
 //servo opening (deg) and open time(miliseconds)
-#define OPEN_DEG 60
-#define FEED_WAIT 500   
+#define OPEN_DEG 40
+#define FEED_WAIT 1500
 
 #define rxPin 5
 #define txPin 6
@@ -45,11 +45,11 @@ void bt_setup()  {
 
 void setup()
 {
-  Serial.begin(9600);
-  Serial.println("Started");
+  //Serial.begin(9600);
+  //Serial.println("Started");
   pinMode(A3, INPUT);
-  servo_10.attach(3, 500, 2500);
-
+  servo_10.attach(4, 500, 1000);
+//  servo_10.write(0);
 
   setup_lcd();
 
@@ -66,9 +66,15 @@ void setup()
 
 void loop()
 {
+  
   DateTime now = rtc.now();
-
   lcd.clear();
+
+  if (digitalRead(A3) == HIGH){
+    servo_10.write(OPEN_DEG);
+    delay(FEED_WAIT);
+  
+  }
 
   if(feedCount>0)
   {
@@ -108,7 +114,7 @@ void loop()
 
     case 'f':
       lcd.print("Input feed");
-      Serial.print("Command f");
+      Serial.print(now.hour());
       auxIdx = 0;
       while(auxIdx<5)
       {
@@ -118,13 +124,13 @@ void loop()
           if(isdigit(a) || (a==':' && auxIdx==2))
           {
             lcd.print(a);
-            Serial.print(a);
+            //Serial.print(a);
             aux[auxIdx++]=a;
           }
           delay(20);
         }
       }
-      Serial.println("Finished time input");
+      //Serial.println("Finished time input");
       int hour = (aux[0]-'0')*10 + (aux[1]-'0');
       int minute = (aux[3]-'0')*10 + (aux[4]-'0');
       if(hour>23 || hour<0 || minute > 59 || minute < 0)
@@ -144,7 +150,7 @@ void loop()
         hf[i]=hour;
         mf[i]=minute;
         feedCount++;
-        Serial.println(feedCount);
+        //Serial.println(feedCount);
       }
       else
       {
@@ -172,7 +178,7 @@ void loop()
   
   if(lastInp=='l')
   {
-    Serial.print("Command l");
+    //Serial.print("Command l");
     char listComm=' ';
     int printIdx = feedIdx;
     while(listComm!='e')
@@ -237,9 +243,9 @@ void loop()
     lcd.print("Feeding.....");
     servo_10.write(OPEN_DEG);
     delay(FEED_WAIT);
-    servo_10.write(0);
     feedIdx++;
   }
+ servo_10.writeMicroseconds(2200);
 
   //put feedIdx in the correct spot
   while(feedIdx<feedCount && (now.hour()>hf[feedIdx] || (now.hour()==hf[feedIdx] && now.minute()>mf[feedIdx])))
@@ -270,6 +276,5 @@ void loop()
     }
   }
 
-  delay(20); 
+  delay(40); 
 }
-
